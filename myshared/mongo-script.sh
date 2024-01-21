@@ -66,24 +66,26 @@ if [ -z ${PUERTO_MONGOD} ]; then
 fi
 
 # Preparar el repositorio (apt-get) de mongodb añadir su clave apt
-apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 4B7C549A058F8B6B
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.2 multiverse" | tee /etc/apt/sources.list.d/mongodb.list
+apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 160d26bb1785ba38
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+# echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb.list
 
 if [[ -z "$(mongo --version 2>/dev/null | grep '4.2.1')" ]]; then
     # Instalar paquetes comunes, servidor, shell, balanceador de shards y herramientas
     apt-get -y update &&
         apt-get install -y \
-            mongodb-org=4.2.1 \
-            mongodb-org-server=4.2.1 \
-            mongodb-org-shell=4.2.1 \
-            mongodb-org-mongos=4.2.1 \
-            mongodb-org-tools=4.2.1 &&
+            mongodb-org \
+            mongodb-org-server \
+            mongodb-org-shell \
+            mongodb-org-mongos \
+            mongodb-org-tools &&
         rm -rf /var/lib/apt/lists/* &&
         pkill -u mongodb || true &&
         pkill -f mongod || true &&
         rm -rf /var/lib/mongodb
 fi
 
+# Configuración
 # Crear las carpetas de logs y datos con sus permisos
 [[ -d "/datos/bd" ]] || mkdir -p -m 755 "/datos/bd"
 [[ -d "/datos/log" ]] || mkdir -p -m 755 "/datos/log"
@@ -103,9 +105,6 @@ systemLog:
   logAppend: true
 storage:
   dbPath: /datos/bd
-engine: wiredTiger
-  journal:
-    enabled: true
 net:
   port: ${PUERTO_MONGOD}
 security:
@@ -120,7 +119,7 @@ logger "Esperando a que mongod responda..."
 sleep 15
 
 # Crear usuario con la password proporcionada como parametro
-mongo admin <<CREACION_DE_USUARIO
+mongosh admin <<CREACION_DE_USUARIO
 db.createUser({
   user: "${USUARIO}",
   pwd: "${PASSWORD}",

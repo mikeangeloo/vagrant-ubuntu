@@ -1,0 +1,13 @@
+systemLog:
+  destination: file
+  path: /datos/log/mongod.log
+  logAppend: true
+storage:
+  dbPath: /datos/bd
+  journal:
+enabled: true
+net:
+  bindIp: 127.0.0.1
+  port: ${PUERTO_MONGOD}
+security:
+  authorization: enabled
